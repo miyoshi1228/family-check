@@ -1,0 +1,166 @@
+{\rtf1\ansi\ansicpg932\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="ja">\
+<head>\
+<meta charset="UTF-8">\
+<title>\uc0\u23478 \u24237 \u12481 \u12455 \u12483 \u12463 \u12450 \u12503 \u12522 </title>\
+<meta name="viewport" content="width=device-width, initial-scale=1.0">\
+<style>\
+body \{ font-family: sans-serif; background:#f5f5f5; margin:0; padding:20px;\}\
+.container \{ max-width:1000px; margin:auto;\}\
+.card \{ background:white; padding:16px; border-radius:12px; margin-bottom:16px;\}\
+h2 \{ margin:0 0 10px;\}\
+select, textarea \{ width:100%; padding:8px; margin-top:6px;\}\
+button \{ padding:10px 14px; margin-top:10px; border:none; border-radius:8px; cursor:pointer;\}\
+.btn-main \{ background:#111; color:#fff;\}\
+.nav \{ display:flex; gap:10px; margin-bottom:20px;\}\
+.nav button \{ background:#ddd;\}\
+.nav .active \{ background:#111; color:#fff;\}\
+.calendar \{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px;\}\
+.day \{ background:#fff; padding:6px; border-radius:6px; font-size:12px;\}\
+</style>\
+</head>\
+\
+<body>\
+<div class="container">\
+\
+<div class="nav">\
+<button onclick="switchPage('input')" id="btnInput" class="active">\uc0\u20837 \u21147 </button>\
+<button onclick="switchPage('dashboard')" id="btnDash">\uc0\u12480 \u12483 \u12471 \u12517 \u12508 \u12540 \u12489 </button>\
+</div>\
+\
+<!-- \uc0\u20837 \u21147  -->\
+<div id="inputPage">\
+\
+<div id="cards"></div>\
+\
+<button class="btn-main" onclick="saveData()">\uc0\u20445 \u23384 </button>\
+\
+</div>\
+\
+<!-- \uc0\u12480 \u12483 \u12471 \u12517 \u12508 \u12540 \u12489  -->\
+<div id="dashboardPage" style="display:none;">\
+\
+<h2 id="monthLabel"></h2>\
+\
+<div id="summary"></div>\
+\
+<div class="calendar" id="calendar"></div>\
+\
+</div>\
+\
+</div>\
+\
+<script>\
+const members = [\
+\{key:"issei", name:"\uc0\u19968 \u29983 "\},\
+\{key:"kaito", name:"\uc0\u35559 \u20154 "\},\
+\{key:"teruma", name:"\uc0\u36637 \u30495 "\},\
+\{key:"ayumu", name:"\uc0\u27497 \u22818 "\}\
+];\
+\
+let data = JSON.parse(localStorage.getItem("studyData")||"\{\}");\
+\
+function todayKey()\{\
+const d=new Date();\
+return d.toISOString().slice(0,10);\
+\}\
+\
+function buildTimeOptions(val)\{\
+let html="";\
+for(let i=0;i<=720;i+=15)\{\
+html+=`<option value="$\{i\}" $\{val==i?"selected":""\}>$\{i\}\uc0\u20998 </option>`;\
+\}\
+return html;\
+\}\
+\
+function renderCards()\{\
+const container=document.getElementById("cards");\
+container.innerHTML="";\
+const today=todayKey();\
+if(!data[today]) data[today]=\{\};\
+\
+members.forEach(m=>\{\
+const state=data[today][m.key]||\{time:0, text:""\};\
+container.innerHTML+=`\
+<div class="card">\
+<h2>$\{m.name\}</h2>\
+<label>\uc0\u21193 \u24375 \u26178 \u38291 </label>\
+<select onchange="updateTime('$\{m.key\}',this.value)">\
+$\{buildTimeOptions(state.time)\}\
+</select>\
+\
+<label>\uc0\u12420 \u12387 \u12383 \u20869 \u23481 </label>\
+<textarea onchange="updateText('$\{m.key\}',this.value)">$\{state.text||""\}</textarea>\
+</div>\
+`;\
+\});\
+\}\
+\
+function updateTime(key,val)\{\
+const today=todayKey();\
+if(!data[today]) data[today]=\{\};\
+if(!data[today][key]) data[today][key]=\{\};\
+data[today][key].time=parseInt(val);\
+saveLocal();\
+\}\
+\
+function updateText(key,val)\{\
+const today=todayKey();\
+data[today][key].text=val;\
+saveLocal();\
+\}\
+\
+function saveLocal()\{\
+localStorage.setItem("studyData",JSON.stringify(data));\
+\}\
+\
+function saveData()\{\
+alert("\uc0\u20445 \u23384 \u12375 \u12383 \u12424 \u55357 \u56397 ");\
+renderDashboard();\
+\}\
+\
+function switchPage(p)\{\
+document.getElementById("inputPage").style.display=p==="input"?"block":"none";\
+document.getElementById("dashboardPage").style.display=p==="dashboard"?"block":"none";\
+\
+document.getElementById("btnInput").classList.toggle("active",p==="input");\
+document.getElementById("btnDash").classList.toggle("active",p==="dashboard");\
+\
+if(p==="dashboard") renderDashboard();\
+\}\
+\
+function renderDashboard()\{\
+const cal=document.getElementById("calendar");\
+cal.innerHTML="";\
+\
+let total=0;\
+\
+Object.keys(data).forEach(d=>\{\
+members.forEach(m=>\{\
+if(data[d][m.key]) total+=data[d][m.key].time||0;\
+\});\
+\});\
+\
+document.getElementById("summary").innerHTML=`\uc0\u21512 \u35336 \u65306 $\{total\}\u20998 `;\
+\
+Object.keys(data).forEach(d=>\{\
+let dayTotal=0;\
+members.forEach(m=>\{\
+if(data[d][m.key]) dayTotal+=data[d][m.key].time||0;\
+\});\
+cal.innerHTML+=`<div class="day">$\{d\}<br>$\{dayTotal\}\uc0\u20998 </div>`;\
+\});\
+\}\
+\
+renderCards();\
+</script>\
+\
+</body>\
+</html>}
