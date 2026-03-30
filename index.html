@@ -703,35 +703,53 @@
     }
 
     function handlePhotoUpload(memberKey, input) {
-      const files = Array.from(input.files || []).slice(0, 3);
-      if (!files.length) return;
+  const files = Array.from(input.files || []).slice(0, 3);
+  if (!files.length) return;
 
-      const GAS_URL = "https://script.google.com/macros/s/AKfycbwzG2msOSGTk6zJ054rT2QxsHkt1xJX9ZthnKYvmHSuNW5YtptKtkvNkpzqU4a2MxVH/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbztLF7ntBp90jZLlfD6V_L9yEB3Ls7oEYRCWXJ7-bXCLh3LRuLGkjbi8aTUSXw9kHVn/exec";
 
-      Promise.all(files.map(file => fileToDataUrl(file))).then(images => {
-        state[memberKey].photos = [...state[memberKey].photos, ...images].slice(0, 6);
-        saveDailyState();
-        render();
+  files.forEach(file => {
+    const reader = new FileReader();
 
-        files.forEach(file => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("memberKey", memberKey);
-          formData.append("memberName", members.find(m => m.key === memberKey)?.name || memberKey);
-          formData.append("date", todayKey);
+    reader.onload = function () {
+      const dataUrl = reader.result;
+      const base64 = dataUrl.split(",")[1];
 
-          fetch(GAS_URL, {
-            method: "POST",
-            body: formData
-          })
-          .then(() => console.log("Drive保存OK"))
-          .catch(err => console.error("Drive保存失敗", err));
-        });
+      // 画面内プレビュー用
+      state[memberKey].photos = [...state[memberKey].photos, dataUrl].slice(0, 6);
+      saveDailyState();
+      render();
+
+      // Google Drive保存用
+      fetch(GAS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType: file.type,
+          fileName: file.name,
+          memberKey: memberKey,
+          memberName: members.find(m => m.key === memberKey)?.name || memberKey,
+          date: todayKey
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Drive保存OK", data);
+      })
+      .catch(err => {
+        console.error("Drive保存失敗", err);
       });
+    };
 
-      input.value = '';
-    }
+    reader.readAsDataURL(file);
+  });
 
+  input.value = '';
+}
+  
     function removePhoto(memberKey, index) {
       state[memberKey].photos.splice(index, 1);
       saveDailyState();
