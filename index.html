@@ -702,11 +702,11 @@
       });
     }
 
-    function handlePhotoUpload(memberKey, input) {
+function handlePhotoUpload(memberKey, input) {
   const files = Array.from(input.files || []).slice(0, 3);
   if (!files.length) return;
 
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbwBM3hU2d1hJMG3y0zGFYYfnfXjB5lwtp3bIQijfSKWCKwxf4EdafNAiDqnsMKP9LlY/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbwpHynu2xf1I-wzHuRfzxQ8IoRRUItcaj_nx6OcpFMF5pQXqkDN6kUS1USahBJEtxjs/exec";
 
   files.forEach(file => {
     const reader = new FileReader();
@@ -715,12 +715,10 @@
       const dataUrl = reader.result;
       const base64 = dataUrl.split(",")[1];
 
-      // 画面内プレビュー用
       state[memberKey].photos = [...state[memberKey].photos, dataUrl].slice(0, 6);
       saveDailyState();
       render();
 
-      // Google Drive保存用
       fetch(GAS_URL, {
         method: "POST",
         headers: {
@@ -749,6 +747,7 @@
 
   input.value = '';
 }
+    
   
     function removePhoto(memberKey, index) {
       state[memberKey].photos.splice(index, 1);
