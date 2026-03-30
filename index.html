@@ -2,22 +2,79 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>家庭チェックアプリ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:20px;}
-.container { max-width:1000px; margin:auto;}
-.card { background:white; padding:16px; border-radius:12px; margin-bottom:16px;}
-h2 { margin:0 0 10px;}
-select, textarea { width:100%; padding:8px; margin-top:6px;}
-button { padding:10px 14px; margin-top:10px; border:none; border-radius:8px; cursor:pointer;}
-.btn-main { background:#111; color:#fff;}
-.nav { display:flex; gap:10px; margin-bottom:20px;}
-.nav button { background:#ddd;}
-.nav .active { background:#111; color:#fff;}
-.calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
-.day { background:#fff; padding:6px; border-radius:6px; font-size:12px;}
+body {
+  font-family: sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+}
+
+.card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+h2 {
+  margin: 0 0 10px;
+}
+
+select, textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+}
+
+button {
+  padding: 10px 14px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-main {
+  background: #111;
+  color: #fff;
+}
+
+.nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.nav button {
+  background: #ddd;
+}
+
+.nav .active {
+  background: #111;
+  color: #fff;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day {
+  background: #fff;
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
 </style>
 </head>
 
@@ -25,125 +82,140 @@ button { padding:10px 14px; margin-top:10px; border:none; border-radius:8px; cur
 <div class="container">
 
 <div class="nav">
-<button onclick="switchPage('input')" id="btnInput" class="active">入力</button>
-<button onclick="switchPage('dashboard')" id="btnDash">ダッシュボード</button>
+  <button onclick="switchPage('input')" id="btnInput" class="active">入力</button>
+  <button onclick="switchPage('dashboard')" id="btnDash">ダッシュボード</button>
 </div>
 
+<!-- 入力ページ -->
 <div id="inputPage">
-<div id="cards"></div>
-<button class="btn-main" onclick="saveData()">保存</button>
+  <div id="cards"></div>
+  <button class="btn-main" onclick="saveData()">保存</button>
 </div>
 
+<!-- ダッシュボード -->
 <div id="dashboardPage" style="display:none;">
-<h2 id="monthLabel"></h2>
-<div id="summary"></div>
-<div class="calendar" id="calendar"></div>
+  <h2 id="monthLabel"></h2>
+  <div id="summary"></div>
+  <div class="calendar" id="calendar"></div>
 </div>
 
 </div>
 
 <script>
 const members = [
-{key:"issei", name:"一生"},
-{key:"kaito", name:"諧人"},
-{key:"teruma", name:"輝真"},
-{key:"ayumu", name:"歩夢"}
+  {key:"issei", name:"一成"},
+  {key:"kaito", name:"海斗"},
+  {key:"teruma", name:"輝真"},
+  {key:"ayumu", name:"歩夢"}
 ];
 
-let data = JSON.parse(localStorage.getItem("studyData")||"{}");
+let data = JSON.parse(localStorage.getItem("studyData") || "{}");
 
-function todayKey(){
-const d=new Date();
-return d.toISOString().slice(0,10);
+function todayKey() {
+  const d = new Date();
+  return d.toISOString().slice(0,10);
 }
 
-function buildTimeOptions(val){
-let html="";
-for(let i=0;i<=720;i+=15){
-html+=`<option value="${i}" ${val==i?"selected":""}>${i}分</option>`;
-}
-return html;
-}
-
-function renderCards(){
-const container=document.getElementById("cards");
-container.innerHTML="";
-const today=todayKey();
-if(!data[today]) data[today]={};
-
-members.forEach(m=>{
-const state=data[today][m.key]||{time:0,text:""};
-container.innerHTML+=`
-<div class="card">
-<h2>${m.name}</h2>
-
-<label>勉強時間</label>
-<select onchange="updateTime('${m.key}',this.value)">
-${buildTimeOptions(state.time)}
-</select>
-
-<label>やった内容</label>
-<textarea onchange="updateText('${m.key}',this.value)">${state.text||""}</textarea>
-
-</div>
-`;
-});
+function buildTimeOptions(val) {
+  let html = "";
+  for (let i = 0; i <= 720; i += 15) {
+    html += `<option value="${i}" ${val==i?"selected":""}>${i}分</option>`;
+  }
+  return html;
 }
 
-function updateTime(key,val){
-const today=todayKey();
-if(!data[today]) data[today]={};
-if(!data[today][key]) data[today][key]={};
-data[today][key].time=parseInt(val);
-saveLocal();
+function renderCards() {
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+  const today = todayKey();
+
+  if (!data[today]) data[today] = {};
+
+  members.forEach(m => {
+    const state = data[today][m.key] || {time:0, text:""};
+
+    container.innerHTML += `
+    <div class="card">
+      <h2>${m.name}</h2>
+
+      <label>勉強時間</label>
+      <select onchange="updateTime('${m.key}', this.value)">
+        ${buildTimeOptions(state.time)}
+      </select>
+
+      <label>やった内容</label>
+      <textarea onchange="updateText('${m.key}', this.value)">${state.text || ""}</textarea>
+    </div>
+    `;
+  });
 }
 
-function updateText(key,val){
-const today=todayKey();
-data[today][key].text=val;
-saveLocal();
+function updateTime(key, val) {
+  const today = todayKey();
+
+  if (!data[today]) data[today] = {};
+  if (!data[today][key]) data[today][key] = {};
+
+  data[today][key].time = parseInt(val);
+  saveLocal();
 }
 
-function saveLocal(){
-localStorage.setItem("studyData",JSON.stringify(data));
+function updateText(key, val) {
+  const today = todayKey();
+
+  if (!data[today]) data[today] = {};
+  if (!data[today][key]) data[today][key] = {};
+
+  data[today][key].text = val;
+  saveLocal();
 }
 
-function saveData(){
-alert("保存したよ！");
-renderDashboard();
+function saveLocal() {
+  localStorage.setItem("studyData", JSON.stringify(data));
 }
 
-function switchPage(p){
-document.getElementById("inputPage").style.display=p==="input"?"block":"none";
-document.getElementById("dashboardPage").style.display=p==="dashboard"?"block":"none";
-
-document.getElementById("btnInput").classList.toggle("active",p==="input");
-document.getElementById("btnDash").classList.toggle("active",p==="dashboard");
-
-if(p==="dashboard") renderDashboard();
+function saveData() {
+  alert("保存したよ👍");
+  renderDashboard();
 }
 
-function renderDashboard(){
-const cal=document.getElementById("calendar");
-cal.innerHTML="";
+function switchPage(p) {
+  document.getElementById("inputPage").style.display = p==="input" ? "block" : "none";
+  document.getElementById("dashboardPage").style.display = p==="dashboard" ? "block" : "none";
 
-let total=0;
+  document.getElementById("btnInput").classList.toggle("active", p==="input");
+  document.getElementById("btnDash").classList.toggle("active", p==="dashboard");
 
-Object.keys(data).forEach(d=>{
-members.forEach(m=>{
-if(data[d][m.key]) total+=data[d][m.key].time||0;
-});
-});
+  if (p==="dashboard") renderDashboard();
+}
 
-document.getElementById("summary").innerHTML=`合計：${total}分`;
+function renderDashboard() {
+  const cal = document.getElementById("calendar");
+  cal.innerHTML = "";
 
-Object.keys(data).forEach(d=>{
-let dayTotal=0;
-members.forEach(m=>{
-if(data[d][m.key]) dayTotal+=data[d][m.key].time||0;
-});
-cal.innerHTML+=`<div class="day">${d}<br>${dayTotal}分</div>`;
-});
+  let total = 0;
+
+  Object.keys(data).forEach(d => {
+    members.forEach(m => {
+      if (data[d][m.key]) {
+        total += data[d][m.key].time || 0;
+      }
+    });
+  });
+
+  document.getElementById("summary").innerHTML = `合計：${total}分`;
+
+  Object.keys(data).forEach(d => {
+    let dayTotal = 0;
+
+    members.forEach(m => {
+      if (data[d][m.key]) {
+        dayTotal += data[d][m.key].time || 0;
+      }
+    });
+
+    cal.innerHTML += `<div class="day">${d}<br>${dayTotal}分</div>`;
+  });
 }
 
 renderCards();
