@@ -703,33 +703,32 @@
     }
 
     function handlePhotoUpload(memberKey, input) {
-  const files = Array.from(input.files || []).slice(0, 3);
-  if (!files.length) return;
+      const files = Array.from(input.files || []).slice(0, 3);
+      if (!files.length) return;
 
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbzQmwLKNTjAjNq3FlAnlLpzIk64_4ihSQnkgxCPKn7gXftAlkeMyRrYHfEVk8GE1r2e/exec";
+      const GAS_URL = "https://script.google.com/macros/s/AKfycbwzG2msOSGTk6zJ054rT2QxsHkt1xJX9ZthnKYvmHSuNW5YtptKtkvNkpzqU4a2MxVH/exec";
 
-  Promise.all(files.map(file => fileToDataUrl(file))).then(images => {
-    state[memberKey].photos = [...state[memberKey].photos, ...images].slice(0, 6);
-    saveDailyState();
-    render();
+      Promise.all(files.map(file => fileToDataUrl(file))).then(images => {
+        state[memberKey].photos = [...state[memberKey].photos, ...images].slice(0, 6);
+        saveDailyState();
+        render();
 
-    // Google Driveにもアップロード
-    files.forEach(file => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("name", memberKey);
+        files.forEach(file => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("memberKey", memberKey);
+          formData.append("memberName", members.find(m => m.key === memberKey)?.name || memberKey);
+          formData.append("date", todayKey);
 
-      fetch(GAS_URL, {
-        method: "POST",
-        body: formData
-      })
-      .then(res => console.log("Drive保存OK"))
-      .catch(err => console.error("Drive保存失敗", err));
-    });
-  });
+          fetch(GAS_URL, {
+            method: "POST",
+            body: formData
+          })
+          .then(() => console.log("Drive保存OK"))
+          .catch(err => console.error("Drive保存失敗", err));
+        });
+      });
 
-  input.value = '';
-});
       input.value = '';
     }
 
