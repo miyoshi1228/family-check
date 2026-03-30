@@ -1,156 +1,1137 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>家庭チェックアプリ</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>家庭チェックアプリ</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --ok: #dcfce7;
+      --ok-text: #166534;
+      --ng: #fee2e2;
+      --ng-text: #991b1b;
+      --wait: #fef3c7;
+      --wait-text: #92400e;
+      --blue-bg: #eff6ff;
+      --blue-text: #1d4ed8;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
 
-<style>
-body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:20px;}
-.container { max-width:1000px; margin:auto;}
-.card { background:#fff; padding:16px; border-radius:12px; margin-bottom:16px;}
-h2 { margin:0 0 10px;}
-select, textarea { width:100%; padding:8px; margin-top:6px;}
-button { padding:10px 14px; margin-top:10px; border:none; border-radius:8px; cursor:pointer;}
-.btn-main { background:#111; color:#fff;}
-.nav { display:flex; gap:10px; margin-bottom:20px;}
-.nav button { background:#ddd;}
-.nav .active { background:#111; color:#fff;}
-.calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
-.day { background:#fff; padding:6px; border-radius:6px; font-size:12px;}
-</style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 14px 40px;
+    }
+
+    .header { margin-bottom: 18px; }
+    .title {
+      font-size: 28px;
+      font-weight: 800;
+      margin: 0 0 8px;
+      letter-spacing: 0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 0 0 18px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .hero, .footer-card, .history-card, .calendar-card {
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+    }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .badge.ok { background: var(--ok); color: var(--ok-text); }
+    .badge.ng { background: var(--ng); color: var(--ng-text); }
+    .date-box {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .name {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .grade {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .pill.done { background: var(--ok); color: var(--ok-text); }
+    .pill.wait { background: var(--wait); color: var(--wait-text); }
+
+    .task-list {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0 14px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fafafa;
+    }
+
+    .task input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: #111827;
+      flex: 0 0 auto;
+    }
+
+    .task label {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.4;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--muted);
+      margin: 14px 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .field, .textarea, .file-input, .time-select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 13px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .photo-box {
+      margin-top: 10px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .photo-help {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 6px 0 0;
+    }
+
+    .photo-preview-wrap {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .photo-preview {
+      width: 92px;
+      height: 92px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .08s ease, opacity .2s ease;
+    }
+    button:active { transform: scale(0.98); }
+
+    .btn-main { background: #111827; color: #fff; }
+    .btn-sub { background: #eef2ff; color: #3730a3; }
+    .btn-ghost { background: #f3f4f6; color: #374151; }
+
+    .nav-btn.active { background: #111827; color: #fff; }
+
+    .footer-title, .history-title, .calendar-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 10px;
+    }
+
+    .rules, .calendar-sub {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .mini-grid, .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .mini, .stats-box {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fafafa;
+      text-align: center;
+    }
+
+    .stats-box {
+      background: var(--blue-bg);
+      border-color: #dbeafe;
+    }
+
+    .mini strong, .stats-box strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .mini span, .stats-box span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 6px 0 6px;
+    }
+
+    .tab-btn.active { background: #111827; color: #fff; }
+
+    .empty {
+      margin-top: 12px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #fafafa;
+      border: 1px dashed #cbd5e1;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .calendar-weekday, .calendar-day {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px;
+    }
+
+    .calendar-weekday {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      background: #f8fafc;
+    }
+
+    .calendar-day {
+      min-height: 108px;
+    }
+
+    .calendar-day.muted {
+      background: #f8fafc;
+      opacity: .55;
+    }
+
+    .calendar-day.has-record {
+      background: #f8fbff;
+      border-color: #bfdbfe;
+    }
+
+    .calendar-day.today {
+      outline: 2px solid #111827;
+    }
+
+    .calendar-day-number {
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .calendar-day-minutes {
+      font-size: 12px;
+      color: var(--blue-text);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .calendar-day-members {
+      display: grid;
+      gap: 4px;
+    }
+
+    .calendar-member-chip {
+      display: inline-block;
+      padding: 3px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #eef2ff;
+      color: #3730a3;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .summary-highlight {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .stats-grid, .mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .title { font-size: 24px; }
+      .stats-grid, .mini-grid { grid-template-columns: 1fr; }
+      .calendar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .calendar-weekday { display: none; }
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
+  <div class="wrap">
+    <div class="header">
+      <h1 class="title">家庭チェックアプリ</h1>
+      <p class="sub">入力ページとダッシュボードを分け、月間カレンダーと月間・年間の勉強時間合計が見える構成にしています。</p>
+    </div>
 
-<div class="nav">
-  <button onclick="switchPage('input')" id="btnInput" class="active">入力</button>
-  <button onclick="switchPage('dashboard')" id="btnDash">ダッシュボード</button>
-</div>
+    <div class="top-nav">
+      <button id="inputPageBtn" class="btn-main nav-btn active" onclick="switchPage('input')">入力ページ</button>
+      <button id="dashboardPageBtn" class="btn-sub nav-btn" onclick="switchPage('dashboard')">ダッシュボード</button>
+    </div>
 
-<div id="inputPage">
-  <div id="cards"></div>
-  <button class="btn-main" onclick="saveData()">保存</button>
-</div>
+    <div id="inputPage" class="page active">
+      <section class="hero">
+        <div class="status">
+          <div id="globalStatus" class="badge ng">まだ全員終わっていません</div>
+          <div class="date-box" id="todayLabel"></div>
+        </div>
+      </section>
 
-<div id="dashboardPage" style="display:none;">
-  <h2 id="monthLabel"></h2>
-  <div id="summary"></div>
-  <div class="calendar" id="calendar"></div>
-</div>
+      <section class="grid" id="cards"></section>
 
-</div>
+      <section class="footer-card">
+        <h2 class="footer-title">今日の全体状況</h2>
+        <div class="mini-grid" id="summary"></div>
+        <p class="rules">ルール：<strong>全員の「やること」が終わったら自由時間OK</strong>。<br>今は端末内保存版です。共有版にするときは保存先をGoogle側へ切り替えます。</p>
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn-main" onclick="saveTodayRecord()">今日の記録を保存</button>
+          <button class="btn-sub" onclick="resetToday()">今日の入力をリセット</button>
+          <button class="btn-ghost" onclick="exportData()">全データを書き出し</button>
+        </div>
+      </section>
+    </div>
 
-<script>
-const members = [
-  {key:"issei", name:"一成"},
-  {key:"kaito", name:"海斗"}
-];
+    <div id="dashboardPage" class="page">
+      <section class="calendar-card">
+        <div class="calendar-header">
+          <div>
+            <h2 class="calendar-title">月間ダッシュボード</h2>
+            <p class="calendar-sub" id="calendarMonthLabel"></p>
+          </div>
+          <div class="actions" style="margin-top:0;">
+            <button class="btn-ghost" onclick="moveMonth(-1)">前月</button>
+            <button class="btn-sub" onclick="moveMonth(0)">今月</button>
+            <button class="btn-ghost" onclick="moveMonth(1)">次月</button>
+          </div>
+        </div>
 
-let data = JSON.parse(localStorage.getItem("studyData") || "{}");
+        <div class="stats-grid" id="dashboardStats"></div>
+        <div class="summary-highlight" id="dashboardSummaryText"></div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </section>
 
-function todayKey() {
-  return new Date().toISOString().slice(0,10);
-}
+      <section class="history-card">
+        <h2 class="history-title">集計一覧</h2>
+        <div class="tabs">
+          <button id="monthlyTabBtn" class="btn-sub tab-btn active" onclick="switchTab('monthly')">月間</button>
+          <button id="yearlyTabBtn" class="btn-sub tab-btn" onclick="switchTab('yearly')">年間</button>
+          <button id="recordsTabBtn" class="btn-sub tab-btn" onclick="switchTab('records')">記録一覧</button>
+        </div>
 
-function buildTimeOptions(val) {
-  let html="";
-  for(let i=0;i<=720;i+=15){
-    html+=`<option value="${i}" ${val==i?"selected":""}>${i}分</option>`;
-  }
-  return html;
-}
+        <div id="monthlyTab" class="tab-panel">
+          <div class="stats-grid" id="monthlyStats"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>名前</th>
+                  <th>月間勉強時間</th>
+                  <th>保存日数</th>
+                  <th>完了日数</th>
+                  <th>主な記録</th>
+                </tr>
+              </thead>
+              <tbody id="monthlyTableBody"></tbody>
+            </table>
+          </div>
+        </div>
 
-function renderCards(){
-  const container=document.getElementById("cards");
-  container.innerHTML="";
-  const today=todayKey();
-  if(!data[today]) data[today]={};
+        <div id="yearlyTab" class="tab-panel" style="display:none;">
+          <div class="stats-grid" id="yearlyStats"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>名前</th>
+                  <th>年間勉強時間</th>
+                  <th>保存日数</th>
+                  <th>完了日数</th>
+                  <th>写真枚数</th>
+                </tr>
+              </thead>
+              <tbody id="yearlyTableBody"></tbody>
+            </table>
+          </div>
+        </div>
 
-  members.forEach(m=>{
-    const s=data[today][m.key]||{time:0,homework:false,self:false,text:""};
+        <div id="recordsTab" class="tab-panel" style="display:none;">
+          <div id="recordsEmpty" class="empty" style="display:none;">まだ保存された日別データがありません。</div>
+          <div class="table-wrap" id="recordsTableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>日付</th>
+                  <th>名前</th>
+                  <th>勉強時間</th>
+                  <th>完了</th>
+                  <th>やった内容</th>
+                  <th>写真</th>
+                </tr>
+              </thead>
+              <tbody id="recordsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 
-    container.innerHTML+=`
-    <div class="card">
-      <h2>${m.name}</h2>
+  <script>
+    const members = [
+      { key: 'issei', name: '一生', grade: '中学3年', tasks: ['宿題', '自主学習（30〜60分）'] },
+      { key: 'kaito', name: '諧人', grade: '中学2年', tasks: ['宿題', '復習（30分）'] },
+      { key: 'teruma', name: '輝真', grade: '小学2年', tasks: ['宿題', '音読 or 計算（10分）'] },
+      { key: 'ayumu', name: '歩夢', grade: '年長', tasks: ['ワーク（5〜10分）'] }
+    ];
 
-      <label>勉強時間</label>
-      <select onchange="update('${m.key}','time',this.value)">
-        ${buildTimeOptions(s.time)}
-      </select>
+    const todayKey = getLocalDateKey(new Date());
+    const dailyStorageKey = 'family-check-daily-' + todayKey;
+    const recordsStorageKey = 'family-check-records-v3';
 
-      <label><input type="checkbox" ${s.homework?"checked":""}
-        onchange="update('${m.key}','homework',this.checked)"> 宿題</label>
+    let state = loadDailyState();
+    let activeTab = 'monthly';
+    let activePage = 'input';
+    let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-      <label><input type="checkbox" ${s.self?"checked":""}
-        onchange="update('${m.key}','self',this.checked)"> 自主学習</label>
+    function getLocalDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
 
-      <label>内容</label>
-      <textarea onchange="update('${m.key}','text',this.value)">${s.text||""}</textarea>
-    </div>`;
-  });
-}
+    function createDefaultState() {
+      return Object.fromEntries(
+        members.map(member => [member.key, {
+          tasks: member.tasks.map(() => false),
+          studyMinutes: '',
+          content: '',
+          photos: []
+        }])
+      );
+    }
 
-function update(key,type,val){
-  const today=todayKey();
-  if(!data[today]) data[today]={};
-  if(!data[today][key]) data[today][key]={};
-
-  data[today][key][type]= type==="time"?parseInt(val):val;
-  saveLocal();
-}
-
-function saveLocal(){
-  localStorage.setItem("studyData",JSON.stringify(data));
-}
-
-function saveData(){
-  alert("保存OK👍");
-  renderDashboard();
-}
-
-function switchPage(p){
-  document.getElementById("inputPage").style.display=p==="input"?"block":"none";
-  document.getElementById("dashboardPage").style.display=p==="dashboard"?"block":"none";
-
-  document.getElementById("btnInput").classList.toggle("active",p==="input");
-  document.getElementById("btnDash").classList.toggle("active",p==="dashboard");
-
-  if(p==="dashboard") renderDashboard();
-}
-
-function renderDashboard(){
-  const cal=document.getElementById("calendar");
-  cal.innerHTML="";
-
-  let monthTotal=0;
-  let yearTotal=0;
-  const now=new Date();
-  const ym=now.toISOString().slice(0,7);
-  const y=now.getFullYear();
-
-  Object.keys(data).forEach(d=>{
-    let dayTotal=0;
-
-    members.forEach(m=>{
-      if(data[d][m.key]){
-        const t=data[d][m.key].time||0;
-        dayTotal+=t;
-        yearTotal+=t;
-        if(d.startsWith(ym)) monthTotal+=t;
+    function loadDailyState() {
+      const raw = localStorage.getItem(dailyStorageKey);
+      const defaults = createDefaultState();
+      if (!raw) return defaults;
+      try {
+        const parsed = JSON.parse(raw);
+        for (const member of members) {
+          const item = parsed[member.key] || {};
+          parsed[member.key] = {
+            tasks: member.tasks.map((_, i) => Boolean(item.tasks?.[i])),
+            studyMinutes: item.studyMinutes ?? '',
+            content: item.content ?? '',
+            photos: Array.isArray(item.photos) ? item.photos : []
+          };
+        }
+        return parsed;
+      } catch {
+        return defaults;
       }
-    });
+    }
 
-    cal.innerHTML+=`<div class="day">${d}<br>${dayTotal}分</div>`;
-  });
+    function saveDailyState() {
+      localStorage.setItem(dailyStorageKey, JSON.stringify(state));
+    }
 
-  document.getElementById("summary").innerHTML=
-    `月間：${monthTotal}分 / 年間：${yearTotal}分`;
-}
+    function loadAllRecords() {
+      const raw = localStorage.getItem(recordsStorageKey);
+      if (!raw) return {};
+      try { return JSON.parse(raw); } catch { return {}; }
+    }
 
-renderCards();
-</script>
+    function saveAllRecords(records) {
+      localStorage.setItem(recordsStorageKey, JSON.stringify(records));
+    }
 
+    function formatDateJP(date) {
+      return new Intl.DateTimeFormat('ja-JP', {
+        year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+      }).format(date);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function toMinutes(value) { return Number(value || 0); }
+
+    function minutesToLabel(minutes) {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      if (h && m) return `${h}時間${m}分`;
+      if (h) return `${h}時間`;
+      return `${m}分`;
+    }
+
+    function getMonthKey(dateStr) { return dateStr.slice(0, 7); }
+    function getYearKey(dateStr) { return dateStr.slice(0, 4); }
+    function getCurrentMonthKey() {
+      const y = calendarCursor.getFullYear();
+      const m = String(calendarCursor.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`;
+    }
+    function getCurrentYearKey() { return String(calendarCursor.getFullYear()); }
+
+    function isMemberDone(memberKey) { return state[memberKey].tasks.every(Boolean); }
+    function isAllDone() { return members.every(member => isMemberDone(member.key)); }
+
+    function toggleTask(memberKey, taskIndex) {
+      state[memberKey].tasks[taskIndex] = !state[memberKey].tasks[taskIndex];
+      saveDailyState();
+      render();
+    }
+
+    function updateStudyMinutes(memberKey, value) {
+      state[memberKey].studyMinutes = String(value);
+      saveDailyState();
+      renderSummary();
+    }
+
+    function updateContent(memberKey, value) {
+      state[memberKey].content = value;
+      saveDailyState();
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function handlePhotoUpload(memberKey, input) {
+      const files = Array.from(input.files || []).slice(0, 3);
+      if (!files.length) return;
+      Promise.all(files.map(file => fileToDataUrl(file))).then(images => {
+        state[memberKey].photos = [...state[memberKey].photos, ...images].slice(0, 6);
+        saveDailyState();
+        render();
+      });
+      input.value = '';
+    }
+
+    function removePhoto(memberKey, index) {
+      state[memberKey].photos.splice(index, 1);
+      saveDailyState();
+      render();
+    }
+
+    function resetMember(memberKey) {
+      const member = members.find(m => m.key === memberKey);
+      state[memberKey] = {
+        tasks: member.tasks.map(() => false),
+        studyMinutes: '',
+        content: '',
+        photos: []
+      };
+      saveDailyState();
+      render();
+    }
+
+    function resetToday() {
+      if (!confirm('今日の入力を全部リセットしますか？')) return;
+      state = createDefaultState();
+      saveDailyState();
+      render();
+    }
+
+    function saveTodayRecord() {
+      const records = loadAllRecords();
+      records[todayKey] = JSON.parse(JSON.stringify(state));
+      saveAllRecords(records);
+      alert('今日の記録を保存しました。ダッシュボードにも反映されています。');
+      renderHistory();
+    }
+
+    function exportData() {
+      const payload = { today: todayKey, dailyState: state, allRecords: loadAllRecords() };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `family-check-all-data-${todayKey}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function getSavedRecordsArray() {
+      const records = loadAllRecords();
+      return Object.entries(records)
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .map(([date, memberMap]) => ({ date, memberMap }));
+    }
+
+    function buildAggregate(period) {
+      const target = period === 'monthly' ? getCurrentMonthKey() : getCurrentYearKey();
+      const records = getSavedRecordsArray();
+      const map = Object.fromEntries(members.map(member => [member.key, {
+        minutes: 0, days: 0, doneDays: 0, photos: 0, contents: []
+      }]));
+
+      for (const record of records) {
+        const matches = period === 'monthly'
+          ? getMonthKey(record.date) === target
+          : getYearKey(record.date) === target;
+        if (!matches) continue;
+
+        for (const member of members) {
+          const item = record.memberMap?.[member.key];
+          if (!item) continue;
+          map[member.key].minutes += toMinutes(item.studyMinutes);
+          map[member.key].days += 1;
+          if ((item.tasks || []).every(Boolean)) map[member.key].doneDays += 1;
+          map[member.key].photos += Array.isArray(item.photos) ? item.photos.length : 0;
+          if (item.content) map[member.key].contents.push(item.content);
+        }
+      }
+      return map;
+    }
+
+    function getMonthDateRange(date) {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      return {
+        year, month, startWeekday: firstDay.getDay(), totalDays: lastDay.getDate()
+      };
+    }
+
+    function getRecordForDate(dateKey) {
+      return loadAllRecords()[dateKey] || null;
+    }
+
+    function getDayTotalMinutes(record) {
+      if (!record) return 0;
+      return members.reduce((sum, member) => sum + toMinutes(record[member.key]?.studyMinutes), 0);
+    }
+
+    function getDayMemberSummaries(record) {
+      if (!record) return [];
+      return members
+        .map(member => ({ name: member.name, minutes: toMinutes(record[member.key]?.studyMinutes) }))
+        .filter(item => item.minutes > 0);
+    }
+
+    function buildTimeOptions(selectedValue) {
+      const current = String(selectedValue || '0');
+      let options = '';
+      for (let minutes = 0; minutes <= 720; minutes += 15) {
+        const selected = current === String(minutes) ? 'selected' : '';
+        const label = minutes === 0 ? '0分' : minutesToLabel(minutes);
+        options += `<option value="${minutes}" ${selected}>${label}</option>`;
+      }
+      return options;
+    }
+
+    function renderCards() {
+      const root = document.getElementById('cards');
+      root.innerHTML = '';
+
+      members.forEach(member => {
+        const memberState = state[member.key];
+        const done = isMemberDone(member.key);
+        const card = document.createElement('article');
+        card.className = 'card';
+
+        const taskHtml = member.tasks.map((task, index) => {
+          const id = `${member.key}-task-${index}`;
+          return `
+            <div class="task">
+              <input type="checkbox" id="${id}" ${memberState.tasks[index] ? 'checked' : ''} onchange="toggleTask('${member.key}', ${index})">
+              <label for="${id}">${task}</label>
+            </div>
+          `;
+        }).join('');
+
+        const photoHtml = memberState.photos.length
+          ? `<div class="photo-preview-wrap">${memberState.photos.map((src, index) => `
+              <div>
+                <img class="photo-preview" src="${src}" alt="${member.name}の記録写真 ${index + 1}">
+                <div class="actions" style="margin-top:6px;">
+                  <button class="btn-ghost" onclick="removePhoto('${member.key}', ${index})">削除</button>
+                </div>
+              </div>
+            `).join('')}</div>`
+          : '<p class="photo-help">まだ写真はありません</p>';
+
+        card.innerHTML = `
+          <div class="card-top">
+            <div>
+              <h2 class="name">${member.name}</h2>
+              <div class="grade">${member.grade}</div>
+            </div>
+            <div class="pill ${done ? 'done' : 'wait'}">${done ? '完了' : '未完了'}</div>
+          </div>
+
+          <div class="task-list">${taskHtml}</div>
+
+          <div class="section-label">勉強時間</div>
+          <select class="time-select" onchange="updateStudyMinutes('${member.key}', this.value)">
+            ${buildTimeOptions(memberState.studyMinutes)}
+          </select>
+
+          <div class="section-label">やった内容</div>
+          <textarea class="textarea" placeholder="例：漢字2ページ、計算ドリル5ページ、英語ワークP12〜15" oninput="updateContent('${member.key}', this.value)">${escapeHtml(memberState.content)}</textarea>
+
+          <div class="section-label">ページの写真</div>
+          <div class="photo-box">
+            <input class="file-input" type="file" accept="image/*" multiple onchange="handlePhotoUpload('${member.key}', this)">
+            <p class="photo-help">やったページを写メで保存できます。現在は1人あたり最大6枚まで保存。</p>
+            ${photoHtml}
+          </div>
+
+          <div class="actions">
+            <button class="btn-main" onclick="resetMember('${member.key}')">${member.name}をリセット</button>
+          </div>
+        `;
+        root.appendChild(card);
+      });
+    }
+
+    function renderSummary() {
+      const root = document.getElementById('summary');
+      root.innerHTML = '';
+      members.forEach(member => {
+        const total = member.tasks.length;
+        const doneCount = state[member.key].tasks.filter(Boolean).length;
+        const minutes = toMinutes(state[member.key].studyMinutes);
+        const box = document.createElement('div');
+        box.className = 'mini';
+        box.innerHTML = `<strong>${doneCount} / ${total}</strong><span>${member.name}｜${minutesToLabel(minutes)}</span>`;
+        root.appendChild(box);
+      });
+    }
+
+    function renderGlobalStatus() {
+      const box = document.getElementById('globalStatus');
+      if (isAllDone()) {
+        box.className = 'badge ok';
+        box.textContent = '全員OK！自由時間にして大丈夫です';
+      } else {
+        box.className = 'badge ng';
+        box.textContent = 'まだ全員終わっていません';
+      }
+    }
+
+    function renderMonthly() {
+      const data = buildAggregate('monthly');
+      const totalMinutes = Object.values(data).reduce((sum, item) => sum + item.minutes, 0);
+      const totalDays = Object.values(data).reduce((sum, item) => sum + item.days, 0);
+      const totalDoneDays = Object.values(data).reduce((sum, item) => sum + item.doneDays, 0);
+      const totalPhotos = Object.values(data).reduce((sum, item) => sum + item.photos, 0);
+
+      document.getElementById('monthlyStats').innerHTML = `
+        <div class="stats-box"><strong>${minutesToLabel(totalMinutes)}</strong><span>家族の月間勉強時間</span></div>
+        <div class="stats-box"><strong>${totalDays}</strong><span>月間保存件数</span></div>
+        <div class="stats-box"><strong>${totalDoneDays}</strong><span>月間完了件数</span></div>
+        <div class="stats-box"><strong>${totalPhotos}</strong><span>月間写真枚数</span></div>
+      `;
+
+      document.getElementById('monthlyTableBody').innerHTML = members.map(member => {
+        const item = data[member.key];
+        return `
+          <tr>
+            <td>${member.name}</td>
+            <td>${minutesToLabel(item.minutes)}</td>
+            <td>${item.days}</td>
+            <td>${item.doneDays}</td>
+            <td>${escapeHtml(item.contents.slice(0, 2).join(' / ') || '-')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderYearly() {
+      const data = buildAggregate('yearly');
+      const totalMinutes = Object.values(data).reduce((sum, item) => sum + item.minutes, 0);
+      const totalDays = Object.values(data).reduce((sum, item) => sum + item.days, 0);
+      const totalDoneDays = Object.values(data).reduce((sum, item) => sum + item.doneDays, 0);
+      const totalPhotos = Object.values(data).reduce((sum, item) => sum + item.photos, 0);
+
+      document.getElementById('yearlyStats').innerHTML = `
+        <div class="stats-box"><strong>${minutesToLabel(totalMinutes)}</strong><span>家族の年間勉強時間</span></div>
+        <div class="stats-box"><strong>${totalDays}</strong><span>年間保存件数</span></div>
+        <div class="stats-box"><strong>${totalDoneDays}</strong><span>年間完了件数</span></div>
+        <div class="stats-box"><strong>${totalPhotos}</strong><span>年間写真枚数</span></div>
+      `;
+
+      document.getElementById('yearlyTableBody').innerHTML = members.map(member => {
+        const item = data[member.key];
+        return `
+          <tr>
+            <td>${member.name}</td>
+            <td>${minutesToLabel(item.minutes)}</td>
+            <td>${item.days}</td>
+            <td>${item.doneDays}</td>
+            <td>${item.photos}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderRecords() {
+      const records = getSavedRecordsArray();
+      const body = document.getElementById('recordsTableBody');
+      const empty = document.getElementById('recordsEmpty');
+      const wrap = document.getElementById('recordsTableWrap');
+      const rows = [];
+
+      for (const record of records) {
+        for (const member of members) {
+          const item = record.memberMap?.[member.key];
+          if (!item) continue;
+          rows.push(`
+            <tr>
+              <td>${record.date}</td>
+              <td>${member.name}</td>
+              <td>${minutesToLabel(toMinutes(item.studyMinutes))}</td>
+              <td>${(item.tasks || []).every(Boolean) ? '完了' : '未完了'}</td>
+              <td>${escapeHtml(item.content || '-')}</td>
+              <td>${Array.isArray(item.photos) ? item.photos.length : 0}枚</td>
+            </tr>
+          `);
+        }
+      }
+
+      if (!rows.length) {
+        empty.style.display = 'block';
+        wrap.style.display = 'none';
+        body.innerHTML = '';
+      } else {
+        empty.style.display = 'none';
+        wrap.style.display = 'block';
+        body.innerHTML = rows.join('');
+      }
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const label = document.getElementById('calendarMonthLabel');
+      grid.innerHTML = '';
+
+      ['日','月','火','水','木','金','土'].forEach(day => {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-weekday';
+        cell.textContent = day;
+        grid.appendChild(cell);
+      });
+
+      const { year, month, startWeekday, totalDays } = getMonthDateRange(calendarCursor);
+      label.textContent = `${year}年${month + 1}月`;
+      const prevMonthLastDate = new Date(year, month, 0).getDate();
+      const totalCells = Math.ceil((startWeekday + totalDays) / 7) * 7;
+
+      for (let i = 0; i < totalCells; i++) {
+        let dayNumber;
+        let dateObj;
+        let isMuted = false;
+
+        if (i < startWeekday) {
+          dayNumber = prevMonthLastDate - startWeekday + i + 1;
+          dateObj = new Date(year, month - 1, dayNumber);
+          isMuted = true;
+        } else if (i >= startWeekday + totalDays) {
+          dayNumber = i - (startWeekday + totalDays) + 1;
+          dateObj = new Date(year, month + 1, dayNumber);
+          isMuted = true;
+        } else {
+          dayNumber = i - startWeekday + 1;
+          dateObj = new Date(year, month, dayNumber);
+        }
+
+        const dateKey = getLocalDateKey(dateObj);
+        const record = getRecordForDate(dateKey);
+        const totalMinutes = getDayTotalMinutes(record);
+        const memberSummaries = getDayMemberSummaries(record);
+        const isToday = dateKey === todayKey;
+
+        const cell = document.createElement('div');
+        cell.className = `calendar-day${isMuted ? ' muted' : ''}${record ? ' has-record' : ''}${isToday ? ' today' : ''}`;
+        cell.innerHTML = `
+          <div class="calendar-day-number">${dayNumber}</div>
+          <div class="calendar-day-minutes">${record ? minutesToLabel(totalMinutes) : '-'}</div>
+          <div class="calendar-day-members">
+            ${memberSummaries.slice(0, 3).map(item => `<span class="calendar-member-chip">${item.name} ${item.minutes}分</span>`).join('')}
+          </div>
+        `;
+        grid.appendChild(cell);
+      }
+    }
+
+    function renderDashboardStats() {
+      const monthlyData = buildAggregate('monthly');
+      const yearlyData = buildAggregate('yearly');
+      const monthTotal = Object.values(monthlyData).reduce((sum, item) => sum + item.minutes, 0);
+      const yearTotal = Object.values(yearlyData).reduce((sum, item) => sum + item.minutes, 0);
+      const monthDone = Object.values(monthlyData).reduce((sum, item) => sum + item.doneDays, 0);
+      const yearDone = Object.values(yearlyData).reduce((sum, item) => sum + item.doneDays, 0);
+
+      document.getElementById('dashboardStats').innerHTML = `
+        <div class="stats-box"><strong>${minutesToLabel(monthTotal)}</strong><span>当月の家族合計勉強時間</span></div>
+        <div class="stats-box"><strong>${minutesToLabel(yearTotal)}</strong><span>当年の家族合計勉強時間</span></div>
+        <div class="stats-box"><strong>${monthDone}</strong><span>当月の完了件数</span></div>
+        <div class="stats-box"><strong>${yearDone}</strong><span>当年の完了件数</span></div>
+      `;
+
+      document.getElementById('dashboardSummaryText').innerHTML = `
+        <strong>${calendarCursor.getFullYear()}年${calendarCursor.getMonth() + 1}月</strong>の記録をカレンダー表示しています。<br>
+        月間の家族合計勉強時間は <strong>${minutesToLabel(monthTotal)}</strong>、年間の家族合計勉強時間は <strong>${minutesToLabel(yearTotal)}</strong> です。
+      `;
+    }
+
+    function moveMonth(diff) {
+      if (diff === 0) {
+        calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      } else {
+        calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + diff, 1);
+      }
+      renderHistory();
+    }
+
+    function switchTab(tab, rerender = true) {
+      activeTab = tab;
+      document.getElementById('monthlyTab').style.display = tab === 'monthly' ? 'block' : 'none';
+      document.getElementById('yearlyTab').style.display = tab === 'yearly' ? 'block' : 'none';
+      document.getElementById('recordsTab').style.display = tab === 'records' ? 'block' : 'none';
+      document.getElementById('monthlyTabBtn').classList.toggle('active', tab === 'monthly');
+      document.getElementById('yearlyTabBtn').classList.toggle('active', tab === 'yearly');
+      document.getElementById('recordsTabBtn').classList.toggle('active', tab === 'records');
+      if (rerender) renderHistory();
+    }
+
+    function switchPage(page) {
+      activePage = page;
+      document.getElementById('inputPage').classList.toggle('active', page === 'input');
+      document.getElementById('dashboardPage').classList.toggle('active', page === 'dashboard');
+      document.getElementById('inputPageBtn').classList.toggle('active', page === 'input');
+      document.getElementById('dashboardPageBtn').classList.toggle('active', page === 'dashboard');
+      document.getElementById('inputPageBtn').className = page === 'input' ? 'btn-main nav-btn active' : 'btn-sub nav-btn';
+      document.getElementById('dashboardPageBtn').className = page === 'dashboard' ? 'btn-main nav-btn active' : 'btn-sub nav-btn';
+    }
+
+    function renderHistory() {
+      renderMonthly();
+      renderYearly();
+      renderRecords();
+      renderDashboardStats();
+      renderCalendar();
+      switchTab(activeTab, false);
+    }
+
+    function render() {
+      document.getElementById('todayLabel').textContent = formatDateJP(new Date());
+      renderCards();
+      renderSummary();
+      renderGlobalStatus();
+      renderHistory();
+      switchPage(activePage);
+    }
+
+    render();
+  </script>
 </body>
 </html>
