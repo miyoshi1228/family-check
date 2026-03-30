@@ -475,7 +475,7 @@
       <section class="footer-card">
         <h2 class="footer-title">今日の全体状況</h2>
         <div class="mini-grid" id="summary"></div>
-        <p class="rules">ルール：<strong>全員の「やること」が終わったら自由時間OK</strong>。<br>今は端末内保存版です。共有版にするときは保存先をGoogle側へ切り替えます。</p>
+        <p class="rules">ルール：<strong>全員の「やること」が終わったら自由時間OK</strong>。<br>今は端末内保存版です。各自が入力した内容はその場で保存され、さらに子どもごとに「この内容を保存」ボタンで当日の記録に反映できます。共有版にするときは保存先をGoogle側へ切り替えます。</p>
         <div class="actions" style="margin-top:14px;">
           <button class="btn-main" onclick="saveTodayRecord()">今日の記録を保存</button>
           <button class="btn-sub" onclick="resetToday()">今日の入力をリセット</button>
@@ -703,13 +703,33 @@
     }
 
     function handlePhotoUpload(memberKey, input) {
-      const files = Array.from(input.files || []).slice(0, 3);
-      if (!files.length) return;
-      Promise.all(files.map(file => fileToDataUrl(file))).then(images => {
-        state[memberKey].photos = [...state[memberKey].photos, ...images].slice(0, 6);
-        saveDailyState();
-        render();
-      });
+  const files = Array.from(input.files || []).slice(0, 3);
+  if (!files.length) return;
+
+  const GAS_URL = "ここにGASのURLを貼る";
+
+  Promise.all(files.map(file => fileToDataUrl(file))).then(images => {
+    state[memberKey].photos = [...state[memberKey].photos, ...images].slice(0, 6);
+    saveDailyState();
+    render();
+
+    // Google Driveにもアップロード
+    files.forEach(file => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("name", memberKey);
+
+      fetch(GAS_URL, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => console.log("Drive保存OK"))
+      .catch(err => console.error("Drive保存失敗", err));
+    });
+  });
+
+  input.value = '';
+});
       input.value = '';
     }
 
@@ -736,6 +756,16 @@
       state = createDefaultState();
       saveDailyState();
       render();
+    }
+
+    function saveMemberRecord(memberKey) {
+      const records = loadAllRecords();
+      if (!records[todayKey]) records[todayKey] = {};
+      records[todayKey][memberKey] = JSON.parse(JSON.stringify(state[memberKey]));
+      saveAllRecords(records);
+      const member = members.find(m => m.key === memberKey);
+      alert(`${member.name}の内容を保存しました。`);
+      renderHistory();
     }
 
     function saveTodayRecord() {
@@ -885,7 +915,8 @@
           </div>
 
           <div class="actions">
-            <button class="btn-main" onclick="resetMember('${member.key}')">${member.name}をリセット</button>
+            <button class="btn-main" onclick="saveMemberRecord('${member.key}')">${member.name}の内容を保存</button>
+            <button class="btn-sub" onclick="resetMember('${member.key}')">${member.name}をリセット</button>
           </div>
         `;
         root.appendChild(card);
